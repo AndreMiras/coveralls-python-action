@@ -1,5 +1,5 @@
-name: 'Coveralls'
-description: 'Reports to coveralls.io'
+name: 'Coveralls Python'
+description: 'Python coverage reports via coveralls.io'
 runs:
   using: 'docker'
   image: 'Dockerfile'
