@@ -4,6 +4,11 @@ description: 'Python coverage reports via coveralls.io'
 branding:
   color: 'green'
   icon: 'percent'
+inputs:
+  verbose:
+    description: 'Increase logger verbosity with `--verbose`'
 runs:
   using: 'docker'
   image: 'Dockerfile'
+  args:
+    - ${{ inputs.verbose }}

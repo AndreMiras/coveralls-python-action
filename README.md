@@ -12,11 +12,20 @@ You simply need to set one of the following two environment variables:
 
 Also configure your `coverage.py` with `relative_files = True`.
 https://coverage.readthedocs.io/en/coverage-5.0.4/config.html#config-run-relative-files
+```yaml
+- uses: AndreMiras/coveralls-python-action@develop
+  env:
+    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+  with:
+    # Increase logger verbosity with `--verbose`
+    verbose: ''
+```
 
 ## Example usage
 Assuming you have a `make test` that runs coverage testing.
 The following will upload it to coveralls.io.
-```yml
+```yaml
 name: push
 on: [push, pull_request]
 
