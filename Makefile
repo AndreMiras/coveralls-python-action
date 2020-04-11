@@ -57,7 +57,7 @@ docker/build:
 	docker build --tag=$(DOCKER_IMAGE_LINUX) .
 
 docker/run:
-	docker run -it --rm $(DOCKER_IMAGE_LINUX)
+	docker run -it --rm --env-file .env $(DOCKER_IMAGE_LINUX)
 
 docker/run/shell:
-	docker run -it --rm --entrypoint /bin/sh $(DOCKER_IMAGE_LINUX)
+	docker run -it --rm --env-file .env --entrypoint /bin/sh $(DOCKER_IMAGE_LINUX)
