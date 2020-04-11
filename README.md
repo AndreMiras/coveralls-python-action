@@ -1,4 +1,7 @@
 # coveralls-python-action
+
+[![push](https://github.com/AndreMiras/coveralls-python-action/workflows/push/badge.svg?branch=develop)](https://github.com/AndreMiras/coveralls-python-action/actions?query=workflow%3Apush)
+
 GitHub Action for Python Coveralls.io
 
 ## Usage
