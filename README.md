@@ -1,24 +1,33 @@
-# WIP coveralls-python-action
+# coveralls-python-action
+
+[![push](https://github.com/AndreMiras/coveralls-python-action/workflows/push/badge.svg?branch=develop)](https://github.com/AndreMiras/coveralls-python-action/actions?query=workflow%3Apush)
+
 GitHub Action for Python Coveralls.io
 
-# Hello world docker action
-
-This action prints "Hello World" or "Hello" + the name of a person to greet to the log.
-
-## Inputs
-
-### `who-to-greet`
-
-**Required** The name of the person to greet. Default `"World"`.
-
-## Outputs
-
-### `time`
-
-The time we greeted you.
+## Usage
+You simply need to set one of the following two environment variables:
+- `GITHUB_TOKEN`
+- `COVERALLS_REPO_TOKEN`
 
 ## Example usage
+Assuming you have a `make test` that runs coverage testing.
+The following will upload it to coveralls.io.
+```yml
+name: push
+on: [push, pull_request]
 
-uses: actions/hello-world-docker-action@v1
-with:
-  who-to-greet: 'Mona the Octocat'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v1
+
+    - name: Unit tests
+      run: make test
+
+    - name: Coveralls
+      uses: AndreMiras/coveralls-python-action@develop
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
