@@ -4,7 +4,6 @@ import argparse
 import logging
 import os
 import sys
-from datetime import datetime
 from enum import Enum
 
 from coveralls.api import Coveralls, CoverallsException
@@ -68,10 +67,6 @@ def main():
     args = parse_args()
     verbose = args.verbose
     set_log_level(verbose)
-    who_to_greet = args.who_to_greet
-    print(f"Hello {who_to_greet} from Python")
-    time = datetime.now().isoformat()
-    print(f"::set-output name=time::{time}")
     run_coveralls()
 
 
