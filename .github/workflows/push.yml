@@ -11,25 +11,24 @@ jobs:
     - name: Unit tests
       run: make test
 
-    - name: With GITHUB_TOKEN
+    - name: Default arguments
       uses: ./
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: With COVERALLS_REPO_TOKEN
+    - name: With --github-token GITHUB_TOKEN
       uses: ./
-      env:
-        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
-
-    - name: With GITHUB_TOKEN and COVERALLS_REPO_TOKEN
-      uses: ./
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
-
-    - name: With --verbose
-      uses: ./
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        verbose: '--verbose'
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: With --github-token COVERALLS_REPO_TOKEN
+      uses: ./
+      with:
+        github-token: ${{ secrets.COVERALLS_REPO_TOKEN }}
+
+    - name: With --debug
+      uses: ./
+      with:
+        debug: true
+
+    # TODO
+    - name: With --parallel
+      uses: ./

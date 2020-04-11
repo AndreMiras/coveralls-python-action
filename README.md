@@ -6,20 +6,24 @@
 GitHub Action for Python Coveralls.io
 
 ## Usage
-You simply need to set one of the following two environment variables:
-- `GITHUB_TOKEN`
-- `COVERALLS_REPO_TOKEN`
-
-Also configure your `coverage.py` with `relative_files = True`.
+Makes sure your `coverage.py` is configured with `relative_files = True`.
 https://coverage.readthedocs.io/en/coverage-5.0.4/config.html#config-run-relative-files
+
 ```yaml
 - uses: AndreMiras/coveralls-python-action@develop
-  env:
-    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
   with:
-    # Increase logger verbosity with `--verbose`
-    verbose: ''
+    # The `GITHUB_TOKEN` or `COVERALLS_REPO_TOKEN`
+    # Default: ${{ github.token }}
+    github-token: ''
+    # Set to `true` if you are running parallel jobs, then use `parallel-finished: true` for the last action
+    # Default: false
+    parallel: ''
+    # Set to `true` for the last action when using `parallel: true`
+    # Default: false
+    parallel-finished: ''
+    # Set to true to increase logger verbosity
+    # Default: false
+    debug: ''
 ```
 
 ## Example usage
@@ -41,6 +45,4 @@ jobs:
 
     - name: Coveralls
       uses: AndreMiras/coveralls-python-action@develop
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```

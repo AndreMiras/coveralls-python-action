@@ -5,10 +5,27 @@ branding:
   color: 'green'
   icon: 'percent'
 inputs:
-  verbose:
-    description: 'Increase logger verbosity with `--verbose`'
+  github-token:
+    description: 'The `GITHUB_TOKEN` or `COVERALLS_REPO_TOKEN`'
+    default: ${{ github.token }}
+  parallel:
+    description: 'Set to true if you are running parallel jobs, then use `parallel-finished: true` for the last action'
+    default: false
+  parallel-finished:
+    description: 'Set to true for the last action when using `parallel: true`'
+    default: false
+  debug:
+    description: 'Set to `true` to increase logger verbosity'
+    default: false
 runs:
   using: 'docker'
   image: 'Dockerfile'
   args:
-    - ${{ inputs.verbose }}
+    - --github-token
+    - ${{ inputs.github-token }}
+    - --parallel
+    - ${{ inputs.parallel }}
+    - --parallel-finished
+    - ${{ inputs.parallel-finished }}
+    - --debug
+    - ${{ inputs.debug }}
