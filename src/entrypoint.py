@@ -48,7 +48,8 @@ def run_coveralls():
             log.warning(e)
     if result is None:
         set_failed("Failed to submit coverage")
-    log.info(result)
+    log.debug(result)
+    log.info(result["url"])
 
 
 def parse_args():
