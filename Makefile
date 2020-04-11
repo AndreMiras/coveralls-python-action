@@ -15,7 +15,7 @@ DOCKER_IMAGE_LINUX=andremiras/coveralls-python-action
 
 
 $(VIRTUAL_ENV):
-	virtualenv --python $(PYTHON_WITH_VERSION) $(VIRTUAL_ENV)
+	$(PYTHON_WITH_VERSION) -m venv $(VIRTUAL_ENV)
 	$(PIP) install --requirement requirements.txt
 
 virtualenv: $(VIRTUAL_ENV)
@@ -47,6 +47,11 @@ format/black: virtualenv
 	$(BLACK) $(SOURCES)
 
 format: format/isort format/black
+
+clean:
+	rm -rf .pytest_cache/
+	find . -type d -name "__pycache__" -exec rm -r {} +
+	find . -type d -name "*.egg-info" -exec rm -r {} +
 
 docker/build:
 	docker build --tag=$(DOCKER_IMAGE_LINUX) .
