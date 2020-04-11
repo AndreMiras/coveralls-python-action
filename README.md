@@ -1,6 +1,7 @@
 # coveralls-python-action
 
 [![push](https://github.com/AndreMiras/coveralls-python-action/workflows/push/badge.svg?branch=develop)](https://github.com/AndreMiras/coveralls-python-action/actions?query=workflow%3Apush)
+[![Coverage Status](https://coveralls.io/repos/github/AndreMiras/coveralls-python-action/badge.svg?branch=develop)](https://coveralls.io/github/AndreMiras/coveralls-python-action?branch=develop)
 
 GitHub Action for Python Coveralls.io
 
@@ -8,6 +9,9 @@ GitHub Action for Python Coveralls.io
 You simply need to set one of the following two environment variables:
 - `GITHUB_TOKEN`
 - `COVERALLS_REPO_TOKEN`
+
+Also configure your `coverage.py` with `relative_files = True`.
+https://coverage.readthedocs.io/en/coverage-5.0.4/config.html#config-run-relative-files
 
 ## Example usage
 Assuming you have a `make test` that runs coverage testing.

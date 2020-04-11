@@ -1,5 +1,9 @@
 name: 'Coveralls Python'
+author: 'Andre Miras'
 description: 'Python coverage reports via coveralls.io'
+branding:
+  color: 'green'
+  icon: 'percent'
 runs:
   using: 'docker'
   image: 'Dockerfile'
