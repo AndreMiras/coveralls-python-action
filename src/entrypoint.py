@@ -36,6 +36,7 @@ def run_coveralls():
     # (depending on where it's ran from?)
     service_names = ("github", "github-actions")
     kwargs = {"repo_token": repo_token}
+    result = None
     for service_name in service_names:
         log.info(f"Trying submitting coverage with service_name: {service_name}...")
         coveralls = Coveralls(service_name=service_name, **kwargs)
