@@ -6,16 +6,16 @@ branding:
   icon: 'percent'
 inputs:
   github-token:
-    description: 'The `GITHUB_TOKEN` or `COVERALLS_REPO_TOKEN`'
+    description: 'The `GITHUB_TOKEN` or `COVERALLS_REPO_TOKEN`.'
     default: ${{ github.token }}
   parallel:
-    description: 'Set to true if you are running parallel jobs, then use `parallel-finished: true` for the last action'
+    description: 'Set to true if you are using parallel jobs, then use `parallel-finished: true` for the last action.'
     default: false
   parallel-finished:
-    description: 'Set to true for the last action when using `parallel: true`'
+    description: 'Set to true for the last action when using `parallel: true`.'
     default: false
   debug:
-    description: 'Set to `true` to increase logger verbosity'
+    description: 'Set to `true` to increase logger verbosity.'
     default: false
 runs:
   using: 'docker'
