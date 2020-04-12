@@ -12,16 +12,17 @@ https://coverage.readthedocs.io/en/coverage-5.0.4/config.html#config-run-relativ
 ```yaml
 - uses: AndreMiras/coveralls-python-action@develop
   with:
-    # The `GITHUB_TOKEN` or `COVERALLS_REPO_TOKEN`
+    # The `GITHUB_TOKEN` or `COVERALLS_REPO_TOKEN`.
     # Default: ${{ github.token }}
     github-token: ''
-    # Set to `true` if you are running parallel jobs, then use `parallel-finished: true` for the last action
+    # Set to `true` if you are running parallel jobs, then use `parallel-finished: true` for the last action.
     # Default: false
     parallel: ''
-    # Set to `true` for the last action when using `parallel: true`
+    # Set to `true` for the last action when using `parallel: true`.
+    # Note this phase requires `github-token: ${{ secrets.COVERALLS_REPO_TOKEN }}`.
     # Default: false
     parallel-finished: ''
-    # Set to true to increase logger verbosity
+    # Set to true to increase logger verbosity.
     # Default: false
     debug: ''
 ```
@@ -45,4 +46,16 @@ jobs:
 
     - name: Coveralls
       uses: AndreMiras/coveralls-python-action@develop
+      with:
+        parallel: true
+
+   coveralls_finish:
+     needs: test
+     runs-on: ubuntu-latest
+     steps:
+     - name: Coveralls Finished
+       uses: AndreMiras/coveralls-python-action@develop
+       with:
+         parallel-finished: true
+         github-token: ${{ secrets.COVERALLS_REPO_TOKEN }}
 ```

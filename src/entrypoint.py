@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+import os
 import sys
 from enum import Enum
 from unittest import mock
@@ -61,34 +62,58 @@ def run_coveralls(repo_token, parallel=False):
     log.info(result["url"])
 
 
-def post_webhook(repo_token, build_num):
-    """"
-    # https://docs.coveralls.io/parallel-build-webhook
-    coveralls_finish:
-      name: Coveralls finished webhook
-      needs: ["Tests"]
-      runs-on: ubuntu-latest
-      steps:
-        - name: webhook
-          env:
-            COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            COVERALLS_SERVICE_NAME: github
-            TRAVIS_JOB_ID: ${{ github.ref }}:${{ github.sha }}
-          run: |
-            curl "https://coveralls.io/webhook?repo_token=$COVERALLS_REPO_TOKEN" \
-            --data "payload[job_id]=$TRAVIS_JOB_ID&payload[status]=done"
+def get_github_sha():
+    """e.g. ffac537e6cbbf934b08745a378932722df287a53"""
+    return os.environ.get("GITHUB_SHA")
+
+
+def get_github_ref():
     """
-    url = f"https://coveralls.io/webhook?repo_token={repo_token}"
-    # TRAVIS_JOB_ID: ${{ github.ref }}:${{ github.sha }}
-    # data = "payload[job_id]=$TRAVIS_JOB_ID&payload[status]=done"
-    data = {
-        "payload": {
-            # TODO job_id?
-            "build_num": build_num,
-            "status": "done",
-        }
-    }
-    requests.post(url, data)
+    The branch or tag ref that triggered the workflow.
+    For example, refs/heads/feature-branch-1.
+    If neither a branch or tag is available for the variable will not exist.
+    - for pull_request events: refs/pull/<pull_request_number>/merge
+    - for push event: refs/heads/<branch>
+    https://help.github.com/en/actions/configuring-and-managing-workflows/using-environment-variables
+    """
+    return os.environ.get("GITHUB_REF")
+
+
+def get_pull_request_number(github_ref):
+    """
+    >>> get_pull_request_number("refs/pull/<pull_request_number>/merge")
+    "<pull_request_number>"
+    """
+    return github_ref.split("/")[2]
+
+
+def is_pull_request(github_ref):
+    return github_ref and github_ref.startswith("refs/pull/")
+
+
+def get_build_number(github_sha, github_ref):
+    build_number = github_sha
+    if is_pull_request(github_ref):
+        pull_request_number = get_pull_request_number(github_ref)
+        build_number = f"{github_sha}-PR-{pull_request_number}"
+    return build_number
+
+
+def post_webhook(repo_token):
+    """"
+    Note for this call, the repo token is always `COVERALLS_REPO_TOKEN`.
+    It cannot be the `GITHUB_TOKEN`.
+    https://docs.coveralls.io/parallel-build-webhook
+    """
+    url = "https://coveralls.io/webhook"
+    build_num = get_build_number(get_github_sha(), get_github_ref())
+    params = {"repo_token": repo_token}
+    json = {"payload": {"build_num": build_num, "status": "done"}}
+    log.debug(f'requests.post("{url}", params={params}, json={json})')
+    response = requests.post(url, params=params, json=json)
+    response.raise_for_status()
+    log.debug(f"response.json(): {response.json()}")
+    assert response.json() == {"done": True}, response.json()
 
 
 def str_to_bool(value):
@@ -129,10 +154,9 @@ def main():
     parallel = args.parallel
     parallel_finished = args.parallel_finished
     set_log_level(debug)
+    log.debug(f"args: {args}")
     if parallel_finished:
-        # TODO
-        # post_webhook(repo_token, build_num)
-        pass
+        post_webhook(repo_token)
     else:
         run_coveralls(repo_token, parallel)
 
