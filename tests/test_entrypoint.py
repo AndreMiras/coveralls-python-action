@@ -160,3 +160,40 @@ class TestEntryPoint:
                 },
             )
         ]
+
+    @pytest.mark.parametrize(
+        "value,expected",
+        [
+            ("false", False),
+            ("f", False),
+            ("0", False),
+            ("no", False),
+            ("n", False),
+            ("true", True),
+            ("t", True),
+            ("1", True),
+            ("yes", True),
+            ("y", True),
+        ],
+    )
+    def test_str_to_bool(self, value, expected):
+        """Possible recognised values."""
+        assert entrypoint.str_to_bool(value) is expected
+
+    @pytest.mark.parametrize(
+        "value", ["", "yesn't"],
+    )
+    def test_str_to_bool_value_error(self, value):
+        """Other unrecognised string values raise a `ValueError`."""
+        with pytest.raises(ValueError) as ex_info:
+            entrypoint.str_to_bool(value)
+        assert ex_info.value.args == (f"{value} is not a valid boolean value",)
+
+    @pytest.mark.parametrize(
+        "value", [None, 0],
+    )
+    def test_str_to_bool_attribute_error(self, value):
+        """Other unrecognised non-string values raise an `AttributeError`."""
+        with pytest.raises(AttributeError) as ex_info:
+            entrypoint.str_to_bool(value)
+        assert ex_info.value.args[0].endswith(" object has no attribute 'lower'")
