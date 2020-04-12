@@ -45,6 +45,14 @@ class TestEntryPoint:
             entrypoint.main()
         assert m_run_coveralls.call_args_list == [mock.call("TOKEN", False)]
 
+    def test_try_main(self):
+        with mock.patch(
+            "entrypoint.main", side_effect=Exception
+        ) as m_main, pytest.raises(SystemExit) as ex_info:
+            entrypoint.try_main()
+        assert m_main.call_args_list == [mock.call()]
+        assert ex_info.value.args == (entrypoint.ExitCode.FAILURE,)
+
     def test_run_coveralls_github_token(self):
         """Simple case when Coveralls.wear() returns some results."""
         url = "https://coveralls.io/jobs/1234"

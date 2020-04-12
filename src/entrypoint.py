@@ -161,8 +161,12 @@ def main():
         run_coveralls(repo_token, parallel)
 
 
-if __name__ == "__main__":
+def try_main():
     try:
         main()
     except Exception as e:
         set_failed(e)
+
+
+if __name__ == "__main__":
+    try_main()
