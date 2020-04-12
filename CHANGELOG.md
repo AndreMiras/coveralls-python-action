@@ -1,6 +1,6 @@
 # Change Log
 
-## [Unreleased]
+## [v20200412]
 
   - Leverages `with` keyword to configure the action
   - Adds parallel support
