@@ -79,6 +79,11 @@ def get_github_ref():
     return os.environ.get("GITHUB_REF")
 
 
+def get_github_repository():
+    """e.g. octocat/Hello-World"""
+    return os.environ.get("GITHUB_REPOSITORY")
+
+
 def get_pull_request_number(github_ref):
     """
     >>> get_pull_request_number("refs/pull/<pull_request_number>/merge")
@@ -101,16 +106,20 @@ def get_build_number(github_sha, github_ref):
 
 def post_webhook(repo_token):
     """"
-    Note for this call, the repo token is always `COVERALLS_REPO_TOKEN`.
-    It cannot be the `GITHUB_TOKEN`.
     https://docs.coveralls.io/parallel-build-webhook
     """
     url = "https://coveralls.io/webhook"
     build_num = get_build_number(get_github_sha(), get_github_ref())
-    params = {"repo_token": repo_token}
-    json = {"payload": {"build_num": build_num, "status": "done"}}
-    log.debug(f'requests.post("{url}", params={params}, json={json})')
-    response = requests.post(url, params=params, json=json)
+    # note this (undocumented) parameter is optional, but needed for using
+    # `GITHUB_TOKEN` rather than `COVERALLS_REPO_TOKEN`
+    repo_name = get_github_repository()
+    json = {
+        "repo_token": repo_token,
+        "repo_name": repo_name,
+        "payload": {"build_num": build_num, "status": "done"},
+    }
+    log.debug(f'requests.post("{url}", json={json})')
+    response = requests.post(url, json=json)
     response.raise_for_status()
     log.debug(f"response.json(): {response.json()}")
     assert response.json() == {"done": True}, response.json()

@@ -5,6 +5,7 @@
 
 GitHub Action for Python [Coveralls.io](https://coveralls.io/)
 
+## Screenshot
 ![coveralls-python-action](https://i.imgur.com/GMLdGT7.png "Screenshot")
 
 
@@ -40,7 +41,6 @@ jobs:
        uses: AndreMiras/coveralls-python-action@develop
        with:
          parallel-finished: true
-         github-token: ${{ secrets.COVERALLS_REPO_TOKEN }}
 ```
 
 ## Configuration
@@ -54,7 +54,6 @@ jobs:
     # Default: false
     parallel: ''
     # Set to `true` for the last action when using `parallel: true`.
-    # Note this phase requires `github-token: ${{ secrets.COVERALLS_REPO_TOKEN }}`.
     # Default: false
     parallel-finished: ''
     # Set to true to increase logger verbosity.
