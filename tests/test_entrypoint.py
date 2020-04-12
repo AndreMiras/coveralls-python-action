@@ -22,8 +22,11 @@ def patch_sys_argv(argv):
     return mock.patch("sys.argv", argv)
 
 
-def patch_requests_post():
-    return mock.patch("entrypoint.requests.post")
+def patch_requests_post(json_response=None):
+    new_mock = mock.Mock()
+    if json_response:
+        new_mock.return_value.json.return_value = json_response
+    return mock.patch("entrypoint.requests.post", new_mock)
 
 
 class TestEntryPoint:
@@ -89,10 +92,10 @@ class TestEntryPoint:
         4) `GITHUB_REF` is a pull request
         """
         repo_token = "TOKEN"
+        json_response = {"done": True}
         # 1) default, no environment variable
         environ = {}
-        with patch_requests_post() as m_post, patch_os_envirion(environ):
-            m_post.return_value.json.return_value = {"done": True}
+        with patch_requests_post(json_response) as m_post, patch_os_envirion(environ):
             entrypoint.post_webhook(repo_token)
         assert m_post.call_args_list == [
             mock.call(
@@ -105,8 +108,7 @@ class TestEntryPoint:
         environ = {
             "GITHUB_SHA": "ffac537e6cbbf934b08745a378932722df287a53",
         }
-        with patch_requests_post() as m_post, patch_os_envirion(environ):
-            m_post.return_value.json.return_value = {"done": True}
+        with patch_requests_post(json_response) as m_post, patch_os_envirion(environ):
             entrypoint.post_webhook(repo_token)
         assert m_post.call_args_list == [
             mock.call(
@@ -125,8 +127,7 @@ class TestEntryPoint:
             "GITHUB_SHA": "ffac537e6cbbf934b08745a378932722df287a53",
             "GITHUB_REF": "refs/heads/feature-branch-1",
         }
-        with patch_requests_post() as m_post, patch_os_envirion(environ):
-            m_post.return_value.json.return_value = {"done": True}
+        with patch_requests_post(json_response) as m_post, patch_os_envirion(environ):
             entrypoint.post_webhook(repo_token)
         assert m_post.call_args_list == [
             mock.call(
@@ -145,8 +146,7 @@ class TestEntryPoint:
             "GITHUB_SHA": "ffac537e6cbbf934b08745a378932722df287a53",
             "GITHUB_REF": "refs/pull/123/merge",
         }
-        with patch_requests_post() as m_post, patch_os_envirion(environ):
-            m_post.return_value.json.return_value = {"done": True}
+        with patch_requests_post(json_response) as m_post, patch_os_envirion(environ):
             entrypoint.post_webhook(repo_token)
         assert m_post.call_args_list == [
             mock.call(
@@ -160,6 +160,25 @@ class TestEntryPoint:
                 },
             )
         ]
+
+    def test_post_webhook_error(self):
+        """Coveralls.io json error response should raise an exception."""
+        repo_token = "TOKEN"
+        json_response = {"error": "Invalid repo token"}
+        # 1) default, no environment variable
+        environ = {}
+        with patch_requests_post(json_response) as m_post, patch_os_envirion(
+            environ
+        ), pytest.raises(AssertionError) as ex_info:
+            entrypoint.post_webhook(repo_token)
+        assert m_post.call_args_list == [
+            mock.call(
+                "https://coveralls.io/webhook",
+                params={"repo_token": "TOKEN"},
+                json={"payload": {"build_num": None, "status": "done"}},
+            )
+        ]
+        assert ex_info.value.args == (json_response,)
 
     @pytest.mark.parametrize(
         "value,expected",
