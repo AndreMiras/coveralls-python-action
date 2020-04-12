@@ -169,4 +169,4 @@ def try_main():
 
 
 if __name__ == "__main__":
-    try_main()
+    try_main()  # pragma: no cover

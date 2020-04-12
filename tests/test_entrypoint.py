@@ -2,6 +2,7 @@ import signal
 from unittest import mock
 
 import pytest
+from coveralls.api import CoverallsException
 
 import entrypoint
 
@@ -80,6 +81,47 @@ class TestEntryPoint:
             mock.call.debug(m_wear.return_value),
             mock.call.info(url),
         ]
+
+    def test_run_coveralls_wear_error_once(self):
+        """On Coveralls.wear() error we should try another `service_name`."""
+        url = "https://coveralls.io/jobs/1234"
+        side_effect = (
+            CoverallsException("Error"),
+            {"message": "Job ##12.34", "url": url},
+        )
+        with patch_coveralls_wear() as m_wear, patch_log() as m_log:
+            m_wear.side_effect = side_effect
+            entrypoint.run_coveralls(repo_token="TOKEN")
+        assert m_wear.call_args_list == [mock.call(), mock.call()]
+        assert m_log.method_calls == [
+            mock.call.info("Trying submitting coverage with service_name: github..."),
+            mock.call.debug(
+                "Patching os.environ with: "
+                "{'COVERALLS_REPO_TOKEN': 'TOKEN', 'COVERALLS_PARALLEL': ''}"
+            ),
+            mock.call.warning("Failed submitting coverage with service_name: github"),
+            mock.call.warning(side_effect[0]),
+            mock.call.info(
+                "Trying submitting coverage with service_name: github-actions..."
+            ),
+            mock.call.debug(
+                "Patching os.environ with: "
+                "{'COVERALLS_REPO_TOKEN': 'TOKEN', 'COVERALLS_PARALLEL': ''}"
+            ),
+            mock.call.debug(side_effect[1]),
+            mock.call.info(url),
+        ]
+
+    def test_run_coveralls_wear_error_twice(self):
+        """Exits with error code if Coveralls.wear() fails twice."""
+        side_effect = (
+            CoverallsException("Error 1"),
+            CoverallsException("Error 2"),
+        )
+        with patch_coveralls_wear() as m_wear, pytest.raises(SystemExit) as ex_info:
+            m_wear.side_effect = side_effect
+            entrypoint.run_coveralls(repo_token="TOKEN")
+        assert ex_info.value.args == (entrypoint.ExitCode.FAILURE,)
 
     def test_get_build_number(self):
         github_sha = "ffac537e6cbbf934b08745a378932722df287a53"

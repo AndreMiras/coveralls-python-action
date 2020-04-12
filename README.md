@@ -27,7 +27,7 @@ https://coverage.readthedocs.io/en/coverage-5.0.4/config.html#config-run-relativ
     debug: ''
 ```
 
-## Example usage
+## Usage example
 Assuming you have a `make test` that runs coverage testing.
 The following will upload it to coveralls.io.
 ```yaml
