@@ -45,6 +45,14 @@ class TestEntryPoint:
             entrypoint.main()
         assert m_run_coveralls.call_args_list == [mock.call("TOKEN", False)]
 
+    def test_main_parallel_finished(self):
+        argv = ["src/entrypoint.py", "--github-token", "TOKEN", "--parallel-finished"]
+        with patch_sys_argv(argv), mock.patch(
+            "entrypoint.post_webhook"
+        ) as m_post_webhook:
+            entrypoint.main()
+        assert m_post_webhook.call_args_list == [mock.call("TOKEN")]
+
     def test_try_main(self):
         with mock.patch(
             "entrypoint.main", side_effect=Exception
@@ -191,11 +199,13 @@ class TestEntryPoint:
     @pytest.mark.parametrize(
         "value,expected",
         [
+            (False, False),
             ("false", False),
             ("f", False),
             ("0", False),
             ("no", False),
             ("n", False),
+            (True, True),
             ("true", True),
             ("t", True),
             ("1", True),
