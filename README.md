@@ -5,6 +5,9 @@
 
 GitHub Action for Python [Coveralls.io](https://coveralls.io/)
 
+![coveralls-python-action](https://i.imgur.com/GMLdGT7.png "Screenshot")
+
+
 ## Usage
 First make sure your `coverage.py` is configured with [`relative_files = True`](https://coverage.readthedocs.io/en/coverage-5.0.4/config.html#config-run-relative-files).
 
