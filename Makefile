@@ -12,6 +12,11 @@ COVERAGE=$(VIRTUAL_ENV)/bin/coverage
 BLACK=$(VIRTUAL_ENV)/bin/black
 SOURCES=src/ tests/
 DOCKER_IMAGE_LINUX=andremiras/coveralls-python-action
+DOCKER_WORKDIR=/github/workspace
+DOCKER_WORKDIR_FLAG=--workdir $(DOCKER_WORKDIR)
+DOCKER_VOLUME=$(CURDIR):$(DOCKER_WORKDIR)
+DOCKER_VOLUME_FLAG=--volume $(DOCKER_VOLUME)
+
 
 
 $(VIRTUAL_ENV):
@@ -57,7 +62,7 @@ docker/build:
 	docker build --tag=$(DOCKER_IMAGE_LINUX) .
 
 docker/run:
-	docker run -it --rm --env-file .env $(DOCKER_IMAGE_LINUX)
+	docker run -it --rm --env-file .env $(DOCKER_WORKDIR_FLAG) $(DOCKER_VOLUME_FLAG) $(DOCKER_IMAGE_LINUX)
 
 docker/run/shell:
-	docker run -it --rm --env-file .env --entrypoint /bin/sh $(DOCKER_IMAGE_LINUX)
+	docker run -it --rm --env-file .env $(DOCKER_WORKDIR_FLAG) $(DOCKER_VOLUME_FLAG) --entrypoint /bin/sh $(DOCKER_IMAGE_LINUX)

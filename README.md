@@ -1,18 +1,16 @@
 # coveralls-python-action
 
 [![push](https://github.com/AndreMiras/coveralls-python-action/workflows/push/badge.svg?branch=develop)](https://github.com/AndreMiras/coveralls-python-action/actions?query=workflow%3Apush)
+[![Coverage Status](https://coveralls.io/repos/github/AndreMiras/coveralls-python-action/badge.svg?branch=develop)](https://coveralls.io/github/AndreMiras/coveralls-python-action?branch=develop)
 
-GitHub Action for Python Coveralls.io
+GitHub Action for Python [Coveralls.io](https://coveralls.io/)
 
 ## Usage
-You simply need to set one of the following two environment variables:
-- `GITHUB_TOKEN`
-- `COVERALLS_REPO_TOKEN`
+First make sure your `coverage.py` is configured with [`relative_files = True`](https://coverage.readthedocs.io/en/coverage-5.0.4/config.html#config-run-relative-files).
 
-## Example usage
-Assuming you have a `make test` that runs coverage testing.
-The following will upload it to coveralls.io.
-```yml
+Then assuming you have a `make test` that runs coverage testing.
+The following workflow will upload it to coveralls.io.
+```yaml
 name: push
 on: [push, pull_request]
 
@@ -28,6 +26,35 @@ jobs:
 
     - name: Coveralls
       uses: AndreMiras/coveralls-python-action@develop
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        parallel: true
+
+   coveralls_finish:
+     needs: test
+     runs-on: ubuntu-latest
+     steps:
+     - name: Coveralls Finished
+       uses: AndreMiras/coveralls-python-action@develop
+       with:
+         parallel-finished: true
+         github-token: ${{ secrets.COVERALLS_REPO_TOKEN }}
+```
+
+## Configuration
+```yaml
+- uses: AndreMiras/coveralls-python-action@develop
+  with:
+    # The `GITHUB_TOKEN` or `COVERALLS_REPO_TOKEN`.
+    # Default: ${{ github.token }}
+    github-token: ''
+    # Set to `true` if you are using parallel jobs, then use `parallel-finished: true` for the last action.
+    # Default: false
+    parallel: ''
+    # Set to `true` for the last action when using `parallel: true`.
+    # Note this phase requires `github-token: ${{ secrets.COVERALLS_REPO_TOKEN }}`.
+    # Default: false
+    parallel-finished: ''
+    # Set to true to increase logger verbosity.
+    # Default: false
+    debug: ''
 ```
