@@ -33,14 +33,14 @@ jobs:
       with:
         parallel: true
 
-   coveralls_finish:
-     needs: test
-     runs-on: ubuntu-latest
-     steps:
-     - name: Coveralls Finished
-       uses: AndreMiras/coveralls-python-action@develop
-       with:
-         parallel-finished: true
+  coveralls_finish:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Coveralls Finished
+      uses: AndreMiras/coveralls-python-action@develop
+      with:
+        parallel-finished: true
 ```
 
 ## Configuration
