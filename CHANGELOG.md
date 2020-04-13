@@ -1,5 +1,10 @@
 # Change Log
 
+## [v20200413]
+
+  - Made `github-token` parameter optional
+
+
 ## [v20200412]
 
   - Leverages `with` keyword to configure the action

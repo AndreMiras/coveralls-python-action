@@ -158,8 +158,11 @@ class TestEntryPoint:
         assert m_post.call_args_list == [
             mock.call(
                 "https://coveralls.io/webhook",
-                params={"repo_token": "TOKEN"},
-                json={"payload": {"build_num": None, "status": "done"}},
+                json={
+                    "repo_token": "TOKEN",
+                    "repo_name": None,
+                    "payload": {"build_num": None, "status": "done"},
+                },
             )
         ]
         # 2) only `GITHUB_SHA` is set
@@ -171,12 +174,13 @@ class TestEntryPoint:
         assert m_post.call_args_list == [
             mock.call(
                 "https://coveralls.io/webhook",
-                params={"repo_token": "TOKEN"},
                 json={
+                    "repo_token": "TOKEN",
+                    "repo_name": None,
                     "payload": {
                         "build_num": "ffac537e6cbbf934b08745a378932722df287a53",
                         "status": "done",
-                    }
+                    },
                 },
             )
         ]
@@ -190,12 +194,13 @@ class TestEntryPoint:
         assert m_post.call_args_list == [
             mock.call(
                 "https://coveralls.io/webhook",
-                params={"repo_token": "TOKEN"},
                 json={
+                    "repo_token": "TOKEN",
+                    "repo_name": None,
                     "payload": {
                         "build_num": "ffac537e6cbbf934b08745a378932722df287a53",
                         "status": "done",
-                    }
+                    },
                 },
             )
         ]
@@ -203,18 +208,20 @@ class TestEntryPoint:
         environ = {
             "GITHUB_SHA": "ffac537e6cbbf934b08745a378932722df287a53",
             "GITHUB_REF": "refs/pull/123/merge",
+            "GITHUB_REPOSITORY": "octocat/Hello-World",
         }
         with patch_requests_post(json_response) as m_post, patch_os_envirion(environ):
             entrypoint.post_webhook(repo_token)
         assert m_post.call_args_list == [
             mock.call(
                 "https://coveralls.io/webhook",
-                params={"repo_token": "TOKEN"},
                 json={
+                    "repo_token": "TOKEN",
+                    "repo_name": "octocat/Hello-World",
                     "payload": {
                         "build_num": "ffac537e6cbbf934b08745a378932722df287a53-PR-123",
                         "status": "done",
-                    }
+                    },
                 },
             )
         ]
@@ -232,8 +239,11 @@ class TestEntryPoint:
         assert m_post.call_args_list == [
             mock.call(
                 "https://coveralls.io/webhook",
-                params={"repo_token": "TOKEN"},
-                json={"payload": {"build_num": None, "status": "done"}},
+                json={
+                    "repo_token": "TOKEN",
+                    "repo_name": None,
+                    "payload": {"build_num": None, "status": "done"},
+                },
             )
         ]
         assert ex_info.value.args == (json_response,)
