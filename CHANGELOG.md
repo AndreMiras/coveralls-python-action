@@ -1,6 +1,6 @@
 # Change Log
 
-## [Unrelease]
+## [v20200413]
 
   - Made `github-token` parameter optional
 
