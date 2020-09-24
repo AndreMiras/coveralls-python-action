@@ -123,7 +123,7 @@ def post_webhook(repo_token):
     response.raise_for_status()
     result = response.json()
     log.debug(f"response.json(): {result}")
-    assert result.get("done", False), response.json()
+    assert result.get("done", False), result
 
 
 def str_to_bool(value):
