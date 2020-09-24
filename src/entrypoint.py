@@ -121,8 +121,9 @@ def post_webhook(repo_token):
     log.debug(f'requests.post("{url}", json={json})')
     response = requests.post(url, json=json)
     response.raise_for_status()
-    log.debug(f"response.json(): {response.json()}")
-    assert response.json() == {"done": True}, response.json()
+    result = response.json()
+    log.debug(f"response.json(): {result}")
+    assert result.get("done", False), response.json()
 
 
 def str_to_bool(value):
