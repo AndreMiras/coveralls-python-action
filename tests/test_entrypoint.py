@@ -269,18 +269,14 @@ class TestEntryPoint:
         """Possible recognised values."""
         assert entrypoint.str_to_bool(value) is expected
 
-    @pytest.mark.parametrize(
-        "value", ["", "yesn't"],
-    )
+    @pytest.mark.parametrize("value", ["", "yesn't"])
     def test_str_to_bool_value_error(self, value):
         """Other unrecognised string values raise a `ValueError`."""
         with pytest.raises(ValueError) as ex_info:
             entrypoint.str_to_bool(value)
         assert ex_info.value.args == (f"{value} is not a valid boolean value",)
 
-    @pytest.mark.parametrize(
-        "value", [None, 0],
-    )
+    @pytest.mark.parametrize("value", [None, 0])
     def test_str_to_bool_attribute_error(self, value):
         """Other unrecognised non-string values raise an `AttributeError`."""
         with pytest.raises(AttributeError) as ex_info:

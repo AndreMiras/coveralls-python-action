@@ -105,9 +105,7 @@ def get_build_number(github_sha, github_ref):
 
 
 def post_webhook(repo_token):
-    """"
-    https://docs.coveralls.io/parallel-build-webhook
-    """
+    """https://docs.coveralls.io/parallel-build-webhook"""
     url = "https://coveralls.io/webhook"
     build_num = get_build_number(get_github_sha(), get_github_ref())
     # note this (undocumented) parameter is optional, but needed for using

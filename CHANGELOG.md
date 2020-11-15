@@ -1,12 +1,12 @@
 # Change Log
 
-## [v20200413]
+## [Unreleased]
+  - Fixes entrypoint assertion error ([dfm](https://github.com/dfm)), refs #5
 
+## [v20200413]
   - Made `github-token` parameter optional
 
-
 ## [v20200412]
-
   - Leverages `with` keyword to configure the action
   - Adds parallel support
   - Adds webhook support
@@ -14,5 +14,4 @@
 
 
 ## [v20200411]
-
   - Initial release
