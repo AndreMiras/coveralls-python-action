@@ -44,7 +44,9 @@ class TestEntryPoint:
             "entrypoint.run_coveralls"
         ) as m_run_coveralls:
             entrypoint.main()
-        assert m_run_coveralls.call_args_list == [mock.call("TOKEN", False, False, False)]
+        assert m_run_coveralls.call_args_list == [
+            mock.call("TOKEN", False, False, False)
+        ]
 
     def test_main_flag_name(self):
         argv = ["src/entrypoint.py", "--github-token", "TOKEN", "--flag-name", "FLAG"]
@@ -52,7 +54,9 @@ class TestEntryPoint:
             "entrypoint.run_coveralls"
         ) as m_run_coveralls:
             entrypoint.main()
-        assert m_run_coveralls.call_args_list == [mock.call("TOKEN", False, "FLAG", False)]
+        assert m_run_coveralls.call_args_list == [
+            mock.call("TOKEN", False, "FLAG", False)
+        ]
 
     def test_main_base_path(self):
         argv = ["src/entrypoint.py", "--github-token", "TOKEN", "--base-path", "SRC"]
@@ -60,7 +64,9 @@ class TestEntryPoint:
             "entrypoint.run_coveralls"
         ) as m_run_coveralls:
             entrypoint.main()
-        assert m_run_coveralls.call_args_list == [mock.call("TOKEN", False, False, "SRC")]
+        assert m_run_coveralls.call_args_list == [
+            mock.call("TOKEN", False, False, "SRC")
+        ]
 
     def test_main_parallel_finished(self):
         argv = ["src/entrypoint.py", "--github-token", "TOKEN", "--parallel-finished"]
@@ -164,7 +170,7 @@ class TestEntryPoint:
         # 2) `GITHUB_RUN_ID` and `GITHUB_REPOSITORY` are set
         environ = {
             "GITHUB_RUN_ID": "845347868344",
-            "GITHUB_REPOSITORY": "AndreMiras/coveralls-python-action"
+            "GITHUB_REPOSITORY": "AndreMiras/coveralls-python-action",
         }
         with patch_requests_post(json_response) as m_post, patch_os_envirion(environ):
             entrypoint.post_webhook(repo_token)
@@ -181,7 +187,6 @@ class TestEntryPoint:
                 },
             )
         ]
-
 
     def test_post_webhook_error(self):
         """Coveralls.io json error response should raise an exception."""

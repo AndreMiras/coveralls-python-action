@@ -30,10 +30,7 @@ def patch_os_environ(repo_token, parallel, flag_name):
     """
     # https://github.com/coveralls-clients/coveralls-python/blob/2.0.0/coveralls/api.py#L146
     parallel = "true" if parallel else ""
-    environ = {
-        "COVERALLS_REPO_TOKEN": repo_token,
-        "COVERALLS_PARALLEL": parallel
-    }
+    environ = {"COVERALLS_REPO_TOKEN": repo_token, "COVERALLS_PARALLEL": parallel}
     if flag_name:
         environ["COVERALLS_FLAG_NAME"] = flag_name
     log.debug(f"Patching os.environ with: {environ}")
