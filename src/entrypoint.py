@@ -62,6 +62,8 @@ def run_coveralls(repo_token, parallel=False, flag_name=False, base_path=False):
         log.info(f"Trying submitting coverage with service_name: {service_name}...")
         with patch_os_environ(repo_token, parallel, flag_name):
             coveralls = Coveralls(service_name=service_name)
+            report = coveralls.create_report()
+            log.info(report)
             try:
                 result = coveralls.wear()
                 break
