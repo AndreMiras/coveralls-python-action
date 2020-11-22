@@ -49,6 +49,7 @@ def run_coveralls(repo_token, parallel=False, flag_name=False, base_path=False):
     # (depending on where it's ran from?)
     service_names = ("github", "github-actions")
     result = None
+    cwd = os.getcwd()
     log.debug(f"Current Working Directory: {cwd}")
     #if base_path:
     os.chdir(base_path)
