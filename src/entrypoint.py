@@ -40,7 +40,7 @@ def patch_os_environ(repo_token, parallel, flag_name):
     return mock.patch.dict("os.environ", environ)
 
 
-def run_coveralls(repo_token, parallel, flag_name, base_path):
+def run_coveralls(repo_token, parallel=False, flag_name=False, base_path=False):
     """Submits job to coveralls."""
     # note that coveralls.io "service_name" can either be:
     # - "github-actions" (local development?)
