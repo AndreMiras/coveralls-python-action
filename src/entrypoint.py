@@ -51,10 +51,13 @@ def run_coveralls(repo_token, parallel=False, flag_name=False, base_path=False):
     result = None
     cwd = os.getcwd()
     log.debug(f"Current Working Directory: {cwd}")
-    #if base_path:
-    os.chdir(base_path)
+    if base_path and os.path.exists(base_path):
+        os.chdir(base_path)
     cwd = os.getcwd()
     log.debug(f"Current Working Directory: {cwd}")
+    for entry in os.scandir('.'):
+        if entry.is_file():
+            log.debug(entry.name)
     for service_name in service_names:
         log.info(f"Trying submitting coverage with service_name: {service_name}...")
         with patch_os_environ(repo_token, parallel, flag_name):
