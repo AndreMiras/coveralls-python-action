@@ -3,6 +3,7 @@ from unittest import mock
 
 import pytest
 from coveralls.api import CoverallsException
+from requests.models import Response
 
 import entrypoint
 
@@ -23,11 +24,12 @@ def patch_sys_argv(argv):
     return mock.patch("sys.argv", argv)
 
 
-def patch_requests_post(json_response=None):
-    new_mock = mock.Mock()
-    if json_response:
-        new_mock.return_value.json.return_value = json_response
-    return mock.patch("entrypoint.requests.post", new_mock)
+def patch_requests_post(json_response=mock.Mock(), status_code=200):
+    response = Response()
+    response.status_code = status_code
+    response.json = lambda: json_response
+    m_post = mock.Mock(return_value=response)
+    return mock.patch("entrypoint.requests.post", m_post)
 
 
 class TestEntryPoint:
@@ -146,6 +148,37 @@ class TestEntryPoint:
             m_wear.side_effect = side_effect
             entrypoint.run_coveralls(repo_token="TOKEN")
         assert ex_info.value.args == (entrypoint.ExitCode.FAILURE,)
+
+    def test_status_code_422(self):
+        """
+        Makes sure the coveralls package retries on "422 Unprocessable Entry" error
+        rather than crashing while trying to access the `service_job_id` key, refs:
+        https://github.com/coveralls-clients/coveralls-python/pull/241/files#r532248047
+        """
+        status_code = 422
+        with patch_requests_post(status_code=status_code) as m_post, pytest.raises(
+            SystemExit
+        ), patch_log() as m_log:
+            entrypoint.run_coveralls(repo_token="TOKEN")
+        # coveralls package will retry once per service we call it with
+        assert m_post.call_count == 4
+        assert m_log.error.call_args_list == [
+            mock.call("Failed to submit coverage", exc_info=None)
+        ]
+        assert m_log.warning.call_args_list == [
+            mock.call(
+                "Failed submitting coverage with service_name: github",
+                exc_info=CoverallsException(
+                    "Could not submit coverage: 422 Client Error: None for url: None"
+                ),
+            ),
+            mock.call(
+                "Failed submitting coverage with service_name: github-actions",
+                exc_info=CoverallsException(
+                    "Could not submit coverage: 422 Client Error: None for url: None"
+                ),
+            ),
+        ]
 
     def test_post_webhook(self):
         """

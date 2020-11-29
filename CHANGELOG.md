@@ -1,9 +1,10 @@
 # Change Log
 
 ## [Unreleased]
+  - Improves exception logging
+  - Fixes KeyError with `coveralls==2.2.0`
   - Fixes entrypoint assertion error ([dfm](https://github.com/dfm)), refs #5
   - Fixes parallel mode ([johanneswilm](https://github.com/johanneswilm)), refs #8
-  - Improves exception logging
 
 ## [v20200413]
   - Made `github-token` parameter optional
