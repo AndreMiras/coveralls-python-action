@@ -19,7 +19,8 @@ class ExitCode(Enum):
 
 
 def set_failed(message):
-    log.error(message)
+    exc_info = message if isinstance(message, Exception) else None
+    log.error(message, exc_info=exc_info)
     sys.exit(ExitCode.FAILURE)
 
 
@@ -57,9 +58,9 @@ def run_coveralls(repo_token, parallel=False, flag_name=False, base_path=False):
                 break
             except CoverallsException as e:
                 log.warning(
-                    f"Failed submitting coverage with service_name: {service_name}"
+                    f"Failed submitting coverage with service_name: {service_name}",
+                    exc_info=e,
                 )
-                log.warning(e)
     if result is None:
         set_failed("Failed to submit coverage")
     log.debug(result)

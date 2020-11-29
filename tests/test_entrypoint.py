@@ -121,8 +121,10 @@ class TestEntryPoint:
                 "Patching os.environ with: "
                 "{'COVERALLS_REPO_TOKEN': 'TOKEN', 'COVERALLS_PARALLEL': ''}"
             ),
-            mock.call.warning("Failed submitting coverage with service_name: github"),
-            mock.call.warning(side_effect[0]),
+            mock.call.warning(
+                "Failed submitting coverage with service_name: github",
+                exc_info=side_effect[0],
+            ),
             mock.call.info(
                 "Trying submitting coverage with service_name: github-actions..."
             ),
