@@ -44,7 +44,29 @@ class TestEntryPoint:
             "entrypoint.run_coveralls"
         ) as m_run_coveralls:
             entrypoint.main()
-        assert m_run_coveralls.call_args_list == [mock.call("TOKEN", False)]
+        assert m_run_coveralls.call_args_list == [
+            mock.call("TOKEN", False, False, False)
+        ]
+
+    def test_main_flag_name(self):
+        argv = ["src/entrypoint.py", "--github-token", "TOKEN", "--flag-name", "FLAG"]
+        with patch_sys_argv(argv), mock.patch(
+            "entrypoint.run_coveralls"
+        ) as m_run_coveralls:
+            entrypoint.main()
+        assert m_run_coveralls.call_args_list == [
+            mock.call("TOKEN", False, "FLAG", False)
+        ]
+
+    def test_main_base_path(self):
+        argv = ["src/entrypoint.py", "--github-token", "TOKEN", "--base-path", "SRC"]
+        with patch_sys_argv(argv), mock.patch(
+            "entrypoint.run_coveralls"
+        ) as m_run_coveralls:
+            entrypoint.main()
+        assert m_run_coveralls.call_args_list == [
+            mock.call("TOKEN", False, False, "SRC")
+        ]
 
     def test_main_parallel_finished(self):
         argv = ["src/entrypoint.py", "--github-token", "TOKEN", "--parallel-finished"]
@@ -123,31 +145,11 @@ class TestEntryPoint:
             entrypoint.run_coveralls(repo_token="TOKEN")
         assert ex_info.value.args == (entrypoint.ExitCode.FAILURE,)
 
-    def test_get_build_number(self):
-        github_sha = "ffac537e6cbbf934b08745a378932722df287a53"
-        github_ref = "refs/pull/123/merge"
-        assert (
-            entrypoint.get_build_number(github_sha, github_ref)
-            == "ffac537e6cbbf934b08745a378932722df287a53-PR-123"
-        )
-        github_ref = "refs/heads/feature-branch-1"
-        assert (
-            entrypoint.get_build_number(github_sha, github_ref)
-            == "ffac537e6cbbf934b08745a378932722df287a53"
-        )
-        github_ref = None
-        assert (
-            entrypoint.get_build_number(github_sha, github_ref)
-            == "ffac537e6cbbf934b08745a378932722df287a53"
-        )
-
     def test_post_webhook(self):
         """
         Tests different uses cases:
         1) default, no environment variable
-        2) only `GITHUB_SHA` is set
-        3) `GITHUB_REF` is a branch
-        4) `GITHUB_REF` is a pull request
+        2) `GITHUB_RUN_ID` is set
         """
         repo_token = "TOKEN"
         json_response = {"done": True}
@@ -165,9 +167,10 @@ class TestEntryPoint:
                 },
             )
         ]
-        # 2) only `GITHUB_SHA` is set
+        # 2) `GITHUB_RUN_ID` and `GITHUB_REPOSITORY` are set
         environ = {
-            "GITHUB_SHA": "ffac537e6cbbf934b08745a378932722df287a53",
+            "GITHUB_RUN_ID": "845347868344",
+            "GITHUB_REPOSITORY": "AndreMiras/coveralls-python-action",
         }
         with patch_requests_post(json_response) as m_post, patch_os_envirion(environ):
             entrypoint.post_webhook(repo_token)
@@ -176,50 +179,9 @@ class TestEntryPoint:
                 "https://coveralls.io/webhook",
                 json={
                     "repo_token": "TOKEN",
-                    "repo_name": None,
+                    "repo_name": "AndreMiras/coveralls-python-action",
                     "payload": {
-                        "build_num": "ffac537e6cbbf934b08745a378932722df287a53",
-                        "status": "done",
-                    },
-                },
-            )
-        ]
-        # 3) `GITHUB_REF` is a branch
-        environ = {
-            "GITHUB_SHA": "ffac537e6cbbf934b08745a378932722df287a53",
-            "GITHUB_REF": "refs/heads/feature-branch-1",
-        }
-        with patch_requests_post(json_response) as m_post, patch_os_envirion(environ):
-            entrypoint.post_webhook(repo_token)
-        assert m_post.call_args_list == [
-            mock.call(
-                "https://coveralls.io/webhook",
-                json={
-                    "repo_token": "TOKEN",
-                    "repo_name": None,
-                    "payload": {
-                        "build_num": "ffac537e6cbbf934b08745a378932722df287a53",
-                        "status": "done",
-                    },
-                },
-            )
-        ]
-        # 4) `GITHUB_REF` is a pull request
-        environ = {
-            "GITHUB_SHA": "ffac537e6cbbf934b08745a378932722df287a53",
-            "GITHUB_REF": "refs/pull/123/merge",
-            "GITHUB_REPOSITORY": "octocat/Hello-World",
-        }
-        with patch_requests_post(json_response) as m_post, patch_os_envirion(environ):
-            entrypoint.post_webhook(repo_token)
-        assert m_post.call_args_list == [
-            mock.call(
-                "https://coveralls.io/webhook",
-                json={
-                    "repo_token": "TOKEN",
-                    "repo_name": "octocat/Hello-World",
-                    "payload": {
-                        "build_num": "ffac537e6cbbf934b08745a378932722df287a53-PR-123",
+                        "build_num": "845347868344",
                         "status": "done",
                     },
                 },
