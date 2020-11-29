@@ -36,9 +36,10 @@ class TestEntryPoint:
     def test_main_no_token(self):
         """Argument `--github-token` is required."""
         argv = ["src/entrypoint.py"]
-        with patch_sys_argv(argv), pytest.raises(SystemExit) as ex_info:
+        with patch_sys_argv(argv), pytest.raises(
+            SystemExit, match=f"{signal.SIGINT.value}"
+        ):
             entrypoint.main()
-        assert ex_info.value.args == (signal.SIGINT.value,)
 
     def test_main(self):
         argv = ["src/entrypoint.py", "--github-token", "TOKEN"]
@@ -81,10 +82,9 @@ class TestEntryPoint:
     def test_try_main(self):
         with mock.patch(
             "entrypoint.main", side_effect=Exception
-        ) as m_main, pytest.raises(SystemExit) as ex_info:
+        ) as m_main, pytest.raises(SystemExit, match=f"{entrypoint.ExitCode.FAILURE}"):
             entrypoint.try_main()
         assert m_main.call_args_list == [mock.call()]
-        assert ex_info.value.args == (entrypoint.ExitCode.FAILURE,)
 
     def test_run_coveralls_github_token(self):
         """Simple case when Coveralls.wear() returns some results."""
@@ -144,10 +144,11 @@ class TestEntryPoint:
             CoverallsException("Error 1"),
             CoverallsException("Error 2"),
         )
-        with patch_coveralls_wear() as m_wear, pytest.raises(SystemExit) as ex_info:
+        with patch_coveralls_wear() as m_wear, pytest.raises(
+            SystemExit, match=f"{entrypoint.ExitCode.FAILURE}"
+        ):
             m_wear.side_effect = side_effect
             entrypoint.run_coveralls(repo_token="TOKEN")
-        assert ex_info.value.args == (entrypoint.ExitCode.FAILURE,)
 
     def test_status_code_422(self):
         """
@@ -157,7 +158,7 @@ class TestEntryPoint:
         """
         status_code = 422
         with patch_requests_post(status_code=status_code) as m_post, pytest.raises(
-            SystemExit
+            SystemExit, match=f"{entrypoint.ExitCode.FAILURE}"
         ), patch_log() as m_log:
             entrypoint.run_coveralls(repo_token="TOKEN")
         # coveralls package will retry once per service we call it with
@@ -231,7 +232,7 @@ class TestEntryPoint:
         environ = {}
         with patch_requests_post(json_response) as m_post, patch_os_envirion(
             environ
-        ), pytest.raises(AssertionError) as ex_info:
+        ), pytest.raises(AssertionError, match=f"{json_response}"):
             entrypoint.post_webhook(repo_token)
         assert m_post.call_args_list == [
             mock.call(
@@ -243,7 +244,6 @@ class TestEntryPoint:
                 },
             )
         ]
-        assert ex_info.value.args == (json_response,)
 
     @pytest.mark.parametrize(
         "value,expected",
@@ -269,13 +269,11 @@ class TestEntryPoint:
     @pytest.mark.parametrize("value", ["", "yesn't"])
     def test_str_to_bool_value_error(self, value):
         """Other unrecognised string values raise a `ValueError`."""
-        with pytest.raises(ValueError) as ex_info:
+        with pytest.raises(ValueError, match=f"{value} is not a valid boolean value"):
             entrypoint.str_to_bool(value)
-        assert ex_info.value.args == (f"{value} is not a valid boolean value",)
 
     @pytest.mark.parametrize("value", [None, 0])
     def test_str_to_bool_attribute_error(self, value):
         """Other unrecognised non-string values raise an `AttributeError`."""
-        with pytest.raises(AttributeError) as ex_info:
+        with pytest.raises(AttributeError, match=" object has no attribute 'lower'"):
             entrypoint.str_to_bool(value)
-        assert ex_info.value.args[0].endswith(" object has no attribute 'lower'")
