@@ -6,10 +6,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: actions/setup-python@v1
+    - uses: actions/setup-python@v2
 
     - name: Unit tests
-      run: make test
+      run: make test PYTHON_WITH_VERSION=python3
 
     - name: Default arguments
       uses: ./

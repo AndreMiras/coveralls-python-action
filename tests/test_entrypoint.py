@@ -3,6 +3,7 @@ from unittest import mock
 
 import pytest
 from coveralls.api import CoverallsException
+from requests.models import Response
 
 import entrypoint
 
@@ -23,20 +24,22 @@ def patch_sys_argv(argv):
     return mock.patch("sys.argv", argv)
 
 
-def patch_requests_post(json_response=None):
-    new_mock = mock.Mock()
-    if json_response:
-        new_mock.return_value.json.return_value = json_response
-    return mock.patch("entrypoint.requests.post", new_mock)
+def patch_requests_post(json_response=mock.Mock(), status_code=200):
+    response = Response()
+    response.status_code = status_code
+    response.json = lambda: json_response
+    m_post = mock.Mock(return_value=response)
+    return mock.patch("entrypoint.requests.post", m_post)
 
 
 class TestEntryPoint:
     def test_main_no_token(self):
         """Argument `--github-token` is required."""
         argv = ["src/entrypoint.py"]
-        with patch_sys_argv(argv), pytest.raises(SystemExit) as ex_info:
+        with patch_sys_argv(argv), pytest.raises(
+            SystemExit, match=f"{signal.SIGINT.value}"
+        ):
             entrypoint.main()
-        assert ex_info.value.args == (signal.SIGINT.value,)
 
     def test_main(self):
         argv = ["src/entrypoint.py", "--github-token", "TOKEN"]
@@ -44,7 +47,29 @@ class TestEntryPoint:
             "entrypoint.run_coveralls"
         ) as m_run_coveralls:
             entrypoint.main()
-        assert m_run_coveralls.call_args_list == [mock.call("TOKEN", False)]
+        assert m_run_coveralls.call_args_list == [
+            mock.call("TOKEN", False, False, False)
+        ]
+
+    def test_main_flag_name(self):
+        argv = ["src/entrypoint.py", "--github-token", "TOKEN", "--flag-name", "FLAG"]
+        with patch_sys_argv(argv), mock.patch(
+            "entrypoint.run_coveralls"
+        ) as m_run_coveralls:
+            entrypoint.main()
+        assert m_run_coveralls.call_args_list == [
+            mock.call("TOKEN", False, "FLAG", False)
+        ]
+
+    def test_main_base_path(self):
+        argv = ["src/entrypoint.py", "--github-token", "TOKEN", "--base-path", "SRC"]
+        with patch_sys_argv(argv), mock.patch(
+            "entrypoint.run_coveralls"
+        ) as m_run_coveralls:
+            entrypoint.main()
+        assert m_run_coveralls.call_args_list == [
+            mock.call("TOKEN", False, False, "SRC")
+        ]
 
     def test_main_parallel_finished(self):
         argv = ["src/entrypoint.py", "--github-token", "TOKEN", "--parallel-finished"]
@@ -57,10 +82,9 @@ class TestEntryPoint:
     def test_try_main(self):
         with mock.patch(
             "entrypoint.main", side_effect=Exception
-        ) as m_main, pytest.raises(SystemExit) as ex_info:
+        ) as m_main, pytest.raises(SystemExit, match=f"{entrypoint.ExitCode.FAILURE}"):
             entrypoint.try_main()
         assert m_main.call_args_list == [mock.call()]
-        assert ex_info.value.args == (entrypoint.ExitCode.FAILURE,)
 
     def test_run_coveralls_github_token(self):
         """Simple case when Coveralls.wear() returns some results."""
@@ -99,8 +123,10 @@ class TestEntryPoint:
                 "Patching os.environ with: "
                 "{'COVERALLS_REPO_TOKEN': 'TOKEN', 'COVERALLS_PARALLEL': ''}"
             ),
-            mock.call.warning("Failed submitting coverage with service_name: github"),
-            mock.call.warning(side_effect[0]),
+            mock.call.warning(
+                "Failed submitting coverage with service_name: github",
+                exc_info=side_effect[0],
+            ),
             mock.call.info(
                 "Trying submitting coverage with service_name: github-actions..."
             ),
@@ -118,36 +144,48 @@ class TestEntryPoint:
             CoverallsException("Error 1"),
             CoverallsException("Error 2"),
         )
-        with patch_coveralls_wear() as m_wear, pytest.raises(SystemExit) as ex_info:
+        with patch_coveralls_wear() as m_wear, pytest.raises(
+            SystemExit, match=f"{entrypoint.ExitCode.FAILURE}"
+        ):
             m_wear.side_effect = side_effect
             entrypoint.run_coveralls(repo_token="TOKEN")
-        assert ex_info.value.args == (entrypoint.ExitCode.FAILURE,)
 
-    def test_get_build_number(self):
-        github_sha = "ffac537e6cbbf934b08745a378932722df287a53"
-        github_ref = "refs/pull/123/merge"
-        assert (
-            entrypoint.get_build_number(github_sha, github_ref)
-            == "ffac537e6cbbf934b08745a378932722df287a53-PR-123"
-        )
-        github_ref = "refs/heads/feature-branch-1"
-        assert (
-            entrypoint.get_build_number(github_sha, github_ref)
-            == "ffac537e6cbbf934b08745a378932722df287a53"
-        )
-        github_ref = None
-        assert (
-            entrypoint.get_build_number(github_sha, github_ref)
-            == "ffac537e6cbbf934b08745a378932722df287a53"
-        )
+    def test_status_code_422(self):
+        """
+        Makes sure the coveralls package retries on "422 Unprocessable Entry" error
+        rather than crashing while trying to access the `service_job_id` key, refs:
+        https://github.com/coveralls-clients/coveralls-python/pull/241/files#r532248047
+        """
+        status_code = 422
+        with patch_requests_post(status_code=status_code) as m_post, pytest.raises(
+            SystemExit, match=f"{entrypoint.ExitCode.FAILURE}"
+        ), patch_log() as m_log:
+            entrypoint.run_coveralls(repo_token="TOKEN")
+        # coveralls package will retry once per service we call it with
+        assert m_post.call_count == 4
+        assert m_log.error.call_args_list == [
+            mock.call("Failed to submit coverage", exc_info=None)
+        ]
+        assert m_log.warning.call_args_list == [
+            mock.call(
+                "Failed submitting coverage with service_name: github",
+                exc_info=CoverallsException(
+                    "Could not submit coverage: 422 Client Error: None for url: None"
+                ),
+            ),
+            mock.call(
+                "Failed submitting coverage with service_name: github-actions",
+                exc_info=CoverallsException(
+                    "Could not submit coverage: 422 Client Error: None for url: None"
+                ),
+            ),
+        ]
 
     def test_post_webhook(self):
         """
         Tests different uses cases:
         1) default, no environment variable
-        2) only `GITHUB_SHA` is set
-        3) `GITHUB_REF` is a branch
-        4) `GITHUB_REF` is a pull request
+        2) `GITHUB_RUN_ID` is set
         """
         repo_token = "TOKEN"
         json_response = {"done": True}
@@ -165,9 +203,10 @@ class TestEntryPoint:
                 },
             )
         ]
-        # 2) only `GITHUB_SHA` is set
+        # 2) `GITHUB_RUN_ID` and `GITHUB_REPOSITORY` are set
         environ = {
-            "GITHUB_SHA": "ffac537e6cbbf934b08745a378932722df287a53",
+            "GITHUB_RUN_ID": "845347868344",
+            "GITHUB_REPOSITORY": "AndreMiras/coveralls-python-action",
         }
         with patch_requests_post(json_response) as m_post, patch_os_envirion(environ):
             entrypoint.post_webhook(repo_token)
@@ -176,50 +215,9 @@ class TestEntryPoint:
                 "https://coveralls.io/webhook",
                 json={
                     "repo_token": "TOKEN",
-                    "repo_name": None,
+                    "repo_name": "AndreMiras/coveralls-python-action",
                     "payload": {
-                        "build_num": "ffac537e6cbbf934b08745a378932722df287a53",
-                        "status": "done",
-                    },
-                },
-            )
-        ]
-        # 3) `GITHUB_REF` is a branch
-        environ = {
-            "GITHUB_SHA": "ffac537e6cbbf934b08745a378932722df287a53",
-            "GITHUB_REF": "refs/heads/feature-branch-1",
-        }
-        with patch_requests_post(json_response) as m_post, patch_os_envirion(environ):
-            entrypoint.post_webhook(repo_token)
-        assert m_post.call_args_list == [
-            mock.call(
-                "https://coveralls.io/webhook",
-                json={
-                    "repo_token": "TOKEN",
-                    "repo_name": None,
-                    "payload": {
-                        "build_num": "ffac537e6cbbf934b08745a378932722df287a53",
-                        "status": "done",
-                    },
-                },
-            )
-        ]
-        # 4) `GITHUB_REF` is a pull request
-        environ = {
-            "GITHUB_SHA": "ffac537e6cbbf934b08745a378932722df287a53",
-            "GITHUB_REF": "refs/pull/123/merge",
-            "GITHUB_REPOSITORY": "octocat/Hello-World",
-        }
-        with patch_requests_post(json_response) as m_post, patch_os_envirion(environ):
-            entrypoint.post_webhook(repo_token)
-        assert m_post.call_args_list == [
-            mock.call(
-                "https://coveralls.io/webhook",
-                json={
-                    "repo_token": "TOKEN",
-                    "repo_name": "octocat/Hello-World",
-                    "payload": {
-                        "build_num": "ffac537e6cbbf934b08745a378932722df287a53-PR-123",
+                        "build_num": "845347868344",
                         "status": "done",
                     },
                 },
@@ -234,7 +232,7 @@ class TestEntryPoint:
         environ = {}
         with patch_requests_post(json_response) as m_post, patch_os_envirion(
             environ
-        ), pytest.raises(AssertionError) as ex_info:
+        ), pytest.raises(AssertionError, match=f"{json_response}"):
             entrypoint.post_webhook(repo_token)
         assert m_post.call_args_list == [
             mock.call(
@@ -246,7 +244,6 @@ class TestEntryPoint:
                 },
             )
         ]
-        assert ex_info.value.args == (json_response,)
 
     @pytest.mark.parametrize(
         "value,expected",
@@ -269,20 +266,14 @@ class TestEntryPoint:
         """Possible recognised values."""
         assert entrypoint.str_to_bool(value) is expected
 
-    @pytest.mark.parametrize(
-        "value", ["", "yesn't"],
-    )
+    @pytest.mark.parametrize("value", ["", "yesn't"])
     def test_str_to_bool_value_error(self, value):
         """Other unrecognised string values raise a `ValueError`."""
-        with pytest.raises(ValueError) as ex_info:
+        with pytest.raises(ValueError, match=f"{value} is not a valid boolean value"):
             entrypoint.str_to_bool(value)
-        assert ex_info.value.args == (f"{value} is not a valid boolean value",)
 
-    @pytest.mark.parametrize(
-        "value", [None, 0],
-    )
+    @pytest.mark.parametrize("value", [None, 0])
     def test_str_to_bool_attribute_error(self, value):
         """Other unrecognised non-string values raise an `AttributeError`."""
-        with pytest.raises(AttributeError) as ex_info:
+        with pytest.raises(AttributeError, match=" object has no attribute 'lower'"):
             entrypoint.str_to_bool(value)
-        assert ex_info.value.args[0].endswith(" object has no attribute 'lower'")

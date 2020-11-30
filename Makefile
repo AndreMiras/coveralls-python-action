@@ -35,7 +35,7 @@ pytest: virtualenv
 test: pytest lint
 
 lint/isort: virtualenv
-	$(ISORT) --check-only --recursive --diff $(SOURCES)
+	$(ISORT) --check-only --diff $(SOURCES)
 
 lint/flake8: virtualenv
 	$(FLAKE8) $(SOURCES)
@@ -46,7 +46,7 @@ lint/black: virtualenv
 lint: lint/isort lint/flake8 lint/black
 
 format/isort: virtualenv
-	$(ISORT) --recursive $(SOURCES)
+	$(ISORT) $(SOURCES)
 
 format/black: virtualenv
 	$(BLACK) $(SOURCES)

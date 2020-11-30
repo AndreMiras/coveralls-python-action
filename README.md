@@ -32,15 +32,16 @@ jobs:
       uses: AndreMiras/coveralls-python-action@develop
       with:
         parallel: true
+        flag-name: Unit Test
 
-   coveralls_finish:
-     needs: test
-     runs-on: ubuntu-latest
-     steps:
-     - name: Coveralls Finished
-       uses: AndreMiras/coveralls-python-action@develop
-       with:
-         parallel-finished: true
+  coveralls_finish:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Coveralls Finished
+      uses: AndreMiras/coveralls-python-action@develop
+      with:
+        parallel-finished: true
 ```
 
 ## Configuration
@@ -56,6 +57,12 @@ jobs:
     # Set to `true` for the last action when using `parallel: true`.
     # Default: false
     parallel-finished: ''
+    # A name to identify the current job. This is useful in combination with `parallel: true`.
+    # Default: false
+    flag-name: ''
+    # A sub-directory in which coverage was executed.
+    # Default: false
+    base-path: ''
     # Set to true to increase logger verbosity.
     # Default: false
     debug: ''
