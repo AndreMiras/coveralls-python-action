@@ -1,5 +1,8 @@
 # Change Log
 
+## [Unreleased]
+  - Reduces build time, refs #9
+
 ## [v20201129]
   - Improves exception logging
   - Fixes KeyError with `coveralls==2.2.0`
