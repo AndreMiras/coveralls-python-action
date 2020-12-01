@@ -16,10 +16,10 @@ inputs:
     default: false
   base-path:
     description: 'The name of a sub-directory in which the coverage files are to be found.'
-    default: false
+    default: '.'
   flag-name:
     description: 'A description of the current job used in connection with parallel.'
-    default: false
+    default: null
   debug:
     description: 'Set to `true` to increase logger verbosity.'
     default: false

@@ -13,6 +13,14 @@ from coveralls.api import Coveralls, CoverallsException
 log = logging.getLogger(__name__)
 
 
+class Default:
+    """Shared default values for consistency."""
+
+    FLAG_NAME = None
+    BASE_PATH = "."
+    PARALLEL = False
+
+
 class ExitCode(Enum):
     SUCCESS = 0
     FAILURE = 1
@@ -38,7 +46,12 @@ def patch_os_environ(repo_token, parallel, flag_name):
     return mock.patch.dict("os.environ", environ)
 
 
-def run_coveralls(repo_token, parallel=False, flag_name=False, base_path=False):
+def run_coveralls(
+    repo_token,
+    parallel=Default.PARALLEL,
+    flag_name=Default.FLAG_NAME,
+    base_path=Default.BASE_PATH,
+):
     """Submits job to coveralls."""
     # note that coveralls.io "service_name" can either be:
     # - "github-actions" (local development?)
@@ -115,10 +128,10 @@ def str_to_bool(value):
 def parse_args():
     parser = argparse.ArgumentParser(description="Greetings")
     parser.add_argument("--github-token", nargs=1, required=True)
-    parser.add_argument("--flag-name", required=False, default=False)
-    parser.add_argument("--base-path", required=False, default=False)
+    parser.add_argument("--flag-name", required=False, default=Default.FLAG_NAME)
+    parser.add_argument("--base-path", required=False, default=Default.BASE_PATH)
     parser.add_argument(
-        "--parallel", type=str_to_bool, nargs="?", const=True, default=False
+        "--parallel", type=str_to_bool, nargs="?", const=True, default=Default.PARALLEL
     )
     parser.add_argument(
         "--parallel-finished", type=str_to_bool, nargs="?", const=True, default=False

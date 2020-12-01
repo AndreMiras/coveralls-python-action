@@ -58,10 +58,10 @@ jobs:
     # Default: false
     parallel-finished: ''
     # A name to identify the current job. This is useful in combination with `parallel: true`.
-    # Default: false
+    # Default: null
     flag-name: ''
     # A sub-directory in which coverage was executed.
-    # Default: false
+    # Default: '.'
     base-path: ''
     # Set to true to increase logger verbosity.
     # Default: false

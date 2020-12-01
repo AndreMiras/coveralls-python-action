@@ -47,9 +47,7 @@ class TestEntryPoint:
             "entrypoint.run_coveralls"
         ) as m_run_coveralls:
             entrypoint.main()
-        assert m_run_coveralls.call_args_list == [
-            mock.call("TOKEN", False, False, False)
-        ]
+        assert m_run_coveralls.call_args_list == [mock.call("TOKEN", False, None, ".")]
 
     def test_main_flag_name(self):
         argv = ["src/entrypoint.py", "--github-token", "TOKEN", "--flag-name", "FLAG"]
@@ -58,7 +56,7 @@ class TestEntryPoint:
         ) as m_run_coveralls:
             entrypoint.main()
         assert m_run_coveralls.call_args_list == [
-            mock.call("TOKEN", False, "FLAG", False)
+            mock.call("TOKEN", False, "FLAG", ".")
         ]
 
     def test_main_base_path(self):
@@ -68,7 +66,7 @@ class TestEntryPoint:
         ) as m_run_coveralls:
             entrypoint.main()
         assert m_run_coveralls.call_args_list == [
-            mock.call("TOKEN", False, False, "SRC")
+            mock.call("TOKEN", False, None, "SRC")
         ]
 
     def test_main_parallel_finished(self):
