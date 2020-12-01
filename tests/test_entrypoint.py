@@ -108,10 +108,6 @@ class TestEntryPoint:
         assert json_file["repo_token"] == token
         assert m_log.method_calls == [
             mock.call.info("Trying submitting coverage with service_name: github..."),
-            mock.call.debug(
-                "Patching os.environ with: "
-                "{'COVERALLS_REPO_TOKEN': 'TOKEN', 'COVERALLS_PARALLEL': ''}"
-            ),
             mock.call.info("cd ."),
             mock.call.info(mock.ANY),
             mock.call.debug(json_response),
@@ -136,10 +132,6 @@ class TestEntryPoint:
         assert json_file["parallel"] == parallel
         assert m_log.method_calls == [
             mock.call.info("Trying submitting coverage with service_name: github..."),
-            mock.call.debug(
-                "Patching os.environ with: "
-                "{'COVERALLS_REPO_TOKEN': 'TOKEN', 'COVERALLS_PARALLEL': 'true'}"
-            ),
             mock.call.info("cd ."),
             mock.call.info(mock.ANY),
             mock.call.debug(json_response),
@@ -155,10 +147,6 @@ class TestEntryPoint:
         assert "parallel" not in json_file
         assert m_log.method_calls == [
             mock.call.info("Trying submitting coverage with service_name: github..."),
-            mock.call.debug(
-                "Patching os.environ with: "
-                "{'COVERALLS_REPO_TOKEN': 'TOKEN', 'COVERALLS_PARALLEL': ''}"
-            ),
             mock.call.info("cd ."),
             mock.call.info(mock.ANY),
             mock.call.debug(json_response),
@@ -183,20 +171,21 @@ class TestEntryPoint:
         assert json_file["flag_name"] == flag_name
         assert m_log.method_calls == [
             mock.call.info("Trying submitting coverage with service_name: github..."),
-            mock.call.debug(
-                "Patching os.environ with: "
-                "{"
-                "'COVERALLS_REPO_TOKEN': 'TOKEN', "
-                "'COVERALLS_PARALLEL': '', "
-                "'COVERALLS_FLAG_NAME': 'Unit'"
-                "}"
-            ),
             mock.call.info("cd ."),
             mock.call.info(mock.ANY),
             mock.call.debug(json_response),
             mock.call.info(url),
         ]
-        flag_name = None
+
+    @pytest.mark.parametrize("flag_name", (None, ""))
+    def test_run_coveralls_no_flag_name(self, flag_name):
+        """Note `flag_name` set `None` or empty string should behave the same."""
+        token = "TOKEN"
+        url = "https://coveralls.io/jobs/1234"
+        json_response = {
+            "message": "Job ##12.34",
+            "url": url,
+        }
         with patch_requests_post(
             json_response=json_response
         ) as m_post, patch_log() as m_log:
@@ -206,10 +195,6 @@ class TestEntryPoint:
         assert "flag_name" not in json_file
         assert m_log.method_calls == [
             mock.call.info("Trying submitting coverage with service_name: github..."),
-            mock.call.debug(
-                "Patching os.environ with: "
-                "{'COVERALLS_REPO_TOKEN': 'TOKEN', 'COVERALLS_PARALLEL': ''}"
-            ),
             mock.call.info("cd ."),
             mock.call.info(mock.ANY),
             mock.call.debug(json_response),
@@ -229,10 +214,6 @@ class TestEntryPoint:
         assert m_wear.call_args_list == [mock.call(), mock.call()]
         assert m_log.method_calls == [
             mock.call.info("Trying submitting coverage with service_name: github..."),
-            mock.call.debug(
-                "Patching os.environ with: "
-                "{'COVERALLS_REPO_TOKEN': 'TOKEN', 'COVERALLS_PARALLEL': ''}"
-            ),
             mock.call.info("cd ."),
             mock.call.warning(
                 "Failed submitting coverage with service_name: github",
@@ -241,10 +222,6 @@ class TestEntryPoint:
             mock.call.info(mock.ANY),
             mock.call.info(
                 "Trying submitting coverage with service_name: github-actions..."
-            ),
-            mock.call.debug(
-                "Patching os.environ with: "
-                "{'COVERALLS_REPO_TOKEN': 'TOKEN', 'COVERALLS_PARALLEL': ''}"
             ),
             mock.call.info("cd ."),
             mock.call.info(mock.ANY),

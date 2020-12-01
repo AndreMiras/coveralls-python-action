@@ -6,7 +6,6 @@ import os
 import sys
 from contextlib import contextmanager
 from enum import Enum
-from unittest import mock
 
 import requests
 from coveralls.api import Coveralls, CoverallsException
@@ -48,20 +47,6 @@ def cd(newdir):
         os.chdir(prevdir)
 
 
-def patch_os_environ(repo_token, parallel, flag_name):
-    """
-    Temporarily updates the environment variable to satisfy coveralls Python API.
-    That is because the coveralls package API consumes mostly environment variables.
-    """
-    # https://github.com/coveralls-clients/coveralls-python/blob/2.0.0/coveralls/api.py#L146
-    parallel = "true" if parallel else ""
-    environ = {"COVERALLS_REPO_TOKEN": repo_token, "COVERALLS_PARALLEL": parallel}
-    if flag_name:
-        environ["COVERALLS_FLAG_NAME"] = flag_name
-    log.debug(f"Patching os.environ with: {environ}")
-    return mock.patch.dict("os.environ", environ)
-
-
 def run_coveralls(
     repo_token,
     parallel=Default.PARALLEL,
@@ -78,13 +63,21 @@ def run_coveralls(
     # sets `service_job_id` key so it exists, refs:
     # https://github.com/coveralls-clients/coveralls-python/pull/241/files#r532248047
     service_job_id = None
+    kwargs = {
+        "repo_token": repo_token,
+        "service_job_id": service_job_id,
+    }
+    if parallel:
+        kwargs.update({"parallel": parallel})
+    # while it would be more Pythonic to check for `None`, the `action.yml` would still
+    # pass empty string rather than `None`, so implicitly checking for both
+    if flag_name:
+        kwargs.update({"flag_name": flag_name})
     result = None
     for service_name in service_names:
         log.info(f"Trying submitting coverage with service_name: {service_name}...")
-        with patch_os_environ(repo_token, parallel, flag_name), cd(base_path):
-            coveralls = Coveralls(
-                service_name=service_name, service_job_id=service_job_id
-            )
+        with cd(base_path):
+            coveralls = Coveralls(service_name=service_name, **kwargs)
             try:
                 result = coveralls.wear()
                 break
