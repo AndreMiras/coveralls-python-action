@@ -1,3 +1,4 @@
+import json
 import signal
 from unittest import mock
 
@@ -86,14 +87,25 @@ class TestEntryPoint:
 
     def test_run_coveralls_github_token(self):
         """Simple case when Coveralls.wear() returns some results."""
+        token = "TOKEN"
         url = "https://coveralls.io/jobs/1234"
-        with patch_coveralls_wear() as m_wear, patch_log() as m_log:
-            m_wear.return_value = {
-                "message": "Job ##12.34",
-                "url": url,
-            }
-            entrypoint.run_coveralls(repo_token="TOKEN")
-        assert m_wear.call_args_list == [mock.call()]
+        json_response = {
+            "message": "Job ##12.34",
+            "url": url,
+        }
+        with patch_requests_post(
+            json_response=json_response
+        ) as m_post, patch_log() as m_log:
+            entrypoint.run_coveralls(repo_token=token)
+        assert m_post.call_args_list == [
+            mock.call(
+                "https://coveralls.io/api/v1/jobs",
+                files={"json_file": mock.ANY},
+                verify=True,
+            )
+        ]
+        json_file = json.loads(m_post.call_args_list[0][1]["files"]["json_file"])
+        assert json_file["repo_token"] == token
         assert m_log.method_calls == [
             mock.call.info("Trying submitting coverage with service_name: github..."),
             mock.call.debug(
@@ -102,7 +114,7 @@ class TestEntryPoint:
             ),
             mock.call.info("cd ."),
             mock.call.info(mock.ANY),
-            mock.call.debug(m_wear.return_value),
+            mock.call.debug(json_response),
             mock.call.info(url),
         ]
 
