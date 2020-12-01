@@ -4,6 +4,7 @@ import argparse
 import logging
 import os
 import sys
+from contextlib import contextmanager
 from enum import Enum
 from unittest import mock
 
@@ -30,6 +31,21 @@ def set_failed(message):
     exc_info = message if isinstance(message, Exception) else None
     log.error(message, exc_info=exc_info)
     sys.exit(ExitCode.FAILURE)
+
+
+@contextmanager
+def cd(newdir):
+    """
+    Set the current working directory to `newdir` for the duration of the context.
+    """
+    prevdir = os.getcwd()
+    log.info("cd {}".format(newdir))
+    os.chdir(os.path.expanduser(newdir))
+    try:
+        yield
+    finally:
+        log.info("cd {}".format(prevdir))
+        os.chdir(prevdir)
 
 
 def patch_os_environ(repo_token, parallel, flag_name):
@@ -63,11 +79,9 @@ def run_coveralls(
     # https://github.com/coveralls-clients/coveralls-python/pull/241/files#r532248047
     service_job_id = None
     result = None
-    if base_path and os.path.exists(base_path):
-        os.chdir(base_path)
     for service_name in service_names:
         log.info(f"Trying submitting coverage with service_name: {service_name}...")
-        with patch_os_environ(repo_token, parallel, flag_name):
+        with patch_os_environ(repo_token, parallel, flag_name), cd(base_path):
             coveralls = Coveralls(
                 service_name=service_name, service_job_id=service_job_id
             )

@@ -100,6 +100,8 @@ class TestEntryPoint:
                 "Patching os.environ with: "
                 "{'COVERALLS_REPO_TOKEN': 'TOKEN', 'COVERALLS_PARALLEL': ''}"
             ),
+            mock.call.info("cd ."),
+            mock.call.info(mock.ANY),
             mock.call.debug(m_wear.return_value),
             mock.call.info(url),
         ]
@@ -121,10 +123,12 @@ class TestEntryPoint:
                 "Patching os.environ with: "
                 "{'COVERALLS_REPO_TOKEN': 'TOKEN', 'COVERALLS_PARALLEL': ''}"
             ),
+            mock.call.info("cd ."),
             mock.call.warning(
                 "Failed submitting coverage with service_name: github",
                 exc_info=side_effect[0],
             ),
+            mock.call.info(mock.ANY),
             mock.call.info(
                 "Trying submitting coverage with service_name: github-actions..."
             ),
@@ -132,6 +136,8 @@ class TestEntryPoint:
                 "Patching os.environ with: "
                 "{'COVERALLS_REPO_TOKEN': 'TOKEN', 'COVERALLS_PARALLEL': ''}"
             ),
+            mock.call.info("cd ."),
+            mock.call.info(mock.ANY),
             mock.call.debug(side_effect[1]),
             mock.call.info(url),
         ]
