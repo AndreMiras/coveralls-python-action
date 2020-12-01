@@ -118,6 +118,53 @@ class TestEntryPoint:
             mock.call.info(url),
         ]
 
+    def test_run_coveralls_parallel(self):
+        """Makes sure the `parallel` parameter is being handled correctly."""
+        token = "TOKEN"
+        url = "https://coveralls.io/jobs/1234"
+        json_response = {
+            "message": "Job ##12.34",
+            "url": url,
+        }
+        parallel = True
+        with patch_requests_post(
+            json_response=json_response
+        ) as m_post, patch_log() as m_log:
+            entrypoint.run_coveralls(repo_token=token, parallel=parallel)
+        assert m_post.call_count == 1
+        json_file = json.loads(m_post.call_args_list[0][1]["files"]["json_file"])
+        assert json_file["parallel"] == parallel
+        assert m_log.method_calls == [
+            mock.call.info("Trying submitting coverage with service_name: github..."),
+            mock.call.debug(
+                "Patching os.environ with: "
+                "{'COVERALLS_REPO_TOKEN': 'TOKEN', 'COVERALLS_PARALLEL': 'true'}"
+            ),
+            mock.call.info("cd ."),
+            mock.call.info(mock.ANY),
+            mock.call.debug(json_response),
+            mock.call.info(url),
+        ]
+        parallel = False
+        with patch_requests_post(
+            json_response=json_response
+        ) as m_post, patch_log() as m_log:
+            entrypoint.run_coveralls(repo_token=token, parallel=parallel)
+        assert m_post.call_count == 1
+        json_file = json.loads(m_post.call_args_list[0][1]["files"]["json_file"])
+        assert "parallel" not in json_file
+        assert m_log.method_calls == [
+            mock.call.info("Trying submitting coverage with service_name: github..."),
+            mock.call.debug(
+                "Patching os.environ with: "
+                "{'COVERALLS_REPO_TOKEN': 'TOKEN', 'COVERALLS_PARALLEL': ''}"
+            ),
+            mock.call.info("cd ."),
+            mock.call.info(mock.ANY),
+            mock.call.debug(json_response),
+            mock.call.info(url),
+        ]
+
     def test_run_coveralls_wear_error_once(self):
         """On Coveralls.wear() error we should try another `service_name`."""
         url = "https://coveralls.io/jobs/1234"
