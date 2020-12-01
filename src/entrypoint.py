@@ -72,23 +72,6 @@ def run_coveralls(repo_token, parallel=False, flag_name=False, base_path=False):
     log.info(result["url"])
 
 
-def get_github_sha():
-    """e.g. ffac537e6cbbf934b08745a378932722df287a53"""
-    return os.environ.get("GITHUB_SHA")
-
-
-def get_github_ref():
-    """
-    The branch or tag ref that triggered the workflow.
-    For example, refs/heads/feature-branch-1.
-    If neither a branch or tag is available for the variable will not exist.
-    - for pull_request events: refs/pull/<pull_request_number>/merge
-    - for push event: refs/heads/<branch>
-    https://help.github.com/en/actions/configuring-and-managing-workflows/using-environment-variables
-    """
-    return os.environ.get("GITHUB_REF")
-
-
 def get_github_repository():
     """e.g. octocat/Hello-World"""
     return os.environ.get("GITHUB_REPOSITORY")
@@ -97,18 +80,6 @@ def get_github_repository():
 def get_github_run_id():
     """e.g. 88748489334"""
     return os.environ.get("GITHUB_RUN_ID")
-
-
-def get_pull_request_number(github_ref):
-    """
-    >>> get_pull_request_number("refs/pull/<pull_request_number>/merge")
-    "<pull_request_number>"
-    """
-    return github_ref.split("/")[2]
-
-
-def is_pull_request(github_ref):
-    return github_ref and github_ref.startswith("refs/pull/")
 
 
 def post_webhook(repo_token):
