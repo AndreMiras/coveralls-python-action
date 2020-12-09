@@ -10,10 +10,18 @@ GitHub Action for Python [Coveralls.io](https://coveralls.io/)
 
 
 ## Usage
-First make sure your `coverage.py` is configured with [`relative_files = True`](https://coverage.readthedocs.io/en/coverage-5.0.4/config.html#config-run-relative-files).
+First make sure your `coverage.py` is configured with [`relative_files = True`](https://coverage.readthedocs.io/en/coverage-5.0.4/config.html#config-run-relative-files), i.e. create or edit your `.coveragerc` file in your repository to include the setting
+
+```
+[run]
+relative_files = True
+```
+
+If this setting is missing you will likely get an error "not a git repository".
 
 Then assuming you have a `make test` that runs coverage testing.
 The following workflow will upload it to coveralls.io.
+
 ```yaml
 name: push
 on: [push, pull_request]
