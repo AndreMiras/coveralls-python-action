@@ -1,5 +1,6 @@
 black
 coveralls
+coverage[toml]
 flake8
 isort
 pytest
