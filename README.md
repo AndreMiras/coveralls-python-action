@@ -95,5 +95,5 @@ Under the `[tool.coverage.run]` section.
 It also requires `coverage` to be installed with the `toml` extra (`pip install coverage[toml]`):
 ```ini
 [tool.coverage.run]
-relative_files = True
+relative_files = true
 ```
