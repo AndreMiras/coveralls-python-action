@@ -62,7 +62,7 @@ docker/build:
 	docker build --tag=$(DOCKER_IMAGE_LINUX) .
 
 docker/run:
-	docker run -it --rm --env-file .env $(DOCKER_WORKDIR_FLAG) $(DOCKER_VOLUME_FLAG) $(DOCKER_IMAGE_LINUX)
+	docker run -it --rm --env-file .env.example $(DOCKER_WORKDIR_FLAG) $(DOCKER_VOLUME_FLAG) $(DOCKER_IMAGE_LINUX)
 
 docker/run/shell:
-	docker run -it --rm --env-file .env $(DOCKER_WORKDIR_FLAG) $(DOCKER_VOLUME_FLAG) --entrypoint /bin/sh $(DOCKER_IMAGE_LINUX)
+	docker run -it --rm --env-file .env.example $(DOCKER_WORKDIR_FLAG) $(DOCKER_VOLUME_FLAG) --entrypoint /bin/sh $(DOCKER_IMAGE_LINUX)
