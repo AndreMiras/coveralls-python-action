@@ -1,4 +1,4 @@
-FROM thekevjames/coveralls:latest
+FROM thekevjames/coveralls:4.0.0
 
 COPY src/ /src/
 RUN python3 -m pip install Cython
